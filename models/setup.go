@@ -22,7 +22,7 @@ func loadEnv() {
 	}
 }
 
-// ConnectDB - init DB connection
+// ConnectDB - setup DB connection
 func ConnectDB() {
 	loadEnv()
 	username := os.Getenv("DB_USERNAME")
@@ -35,7 +35,7 @@ func ConnectDB() {
 	db, err := gorm.Open("mysql", connectionStr)
 
 	if err != nil {
-		fmt.Print(err)
+		fmt.Println(err.Error())
 		panic("Failed to connect to database!")
 	}
 

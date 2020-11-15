@@ -3,7 +3,6 @@ package controllers
 import (
 	"encoding/json"
 	"net/http"
-	"strconv"
 
 	"github.com/andresuchitra/inventory-backend/models"
 	"github.com/gorilla/mux"
@@ -21,30 +20,31 @@ func GetCars(w http.ResponseWriter, r *http.Request) {
 // CreateCar - create new car
 // POST - /cars
 func CreateCar(w http.ResponseWriter, r *http.Request) {
-	car := models.Car{}
+	inputCar := models.Car{}
 
 	decoder := json.NewDecoder(r.Body)
-	if err := decoder.Decode(&car); err != nil {
+	decoder.DisallowUnknownFields()
+
+	if err := decoder.Decode(&inputCar); err != nil {
 		respondError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 	defer r.Body.Close()
 
-	if err := models.DB.Save(&car).Error; err != nil {
+	if err := models.DB.Save(&inputCar).Error; err != nil {
 		respondError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
-	respondJSON(w, http.StatusCreated, car)
+	respondJSON(w, http.StatusCreated, inputCar)
 }
 
 // GetCar - get specific car by :id
 // GET - /cars/:id
 func GetCar(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	id, err := strconv.Atoi(vars["id"])
 
-	if err != nil {
-		respondError(w, http.StatusBadRequest, err.Error())
+	id := validateParam(vars, w)
+	if id == -1 {
 		return
 	}
 
@@ -57,6 +57,57 @@ func GetCar(w http.ResponseWriter, r *http.Request) {
 
 // DeleteCar - delete a car
 // DELETE - /cars/:id
+func DeleteCar(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+
+	id := validateParam(vars, w)
+	if id == -1 {
+		return
+	}
+
+	car := findCar(id, w, r)
+	if car == nil {
+		return
+	}
+
+	if err := models.DB.Delete(&car).Error; err != nil {
+		respondError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	respondJSON(w, http.StatusNoContent, car.ID)
+}
+
+// UpdateCar - update a car
+// PUT - /cars/:id
+func UpdateCar(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	inputCar := models.InputCarUpdate{}
+
+	id := validateParam(vars, w)
+	if id == -1 {
+		return
+	}
+
+	car := findCar(id, w, r)
+	if car == nil {
+		return
+	}
+
+	decoder := json.NewDecoder(r.Body)
+	decoder.DisallowUnknownFields()
+
+	if err := decoder.Decode(&inputCar); err != nil {
+		respondError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	defer r.Body.Close()
+
+	if err := models.DB.Model(&car).Omit("ID").Updates(inputCar).Error; err != nil {
+		respondError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	respondJSON(w, http.StatusOK, car)
+}
 
 // find or report not found when ID is not valid
 func findCar(id int, w http.ResponseWriter, r *http.Request) *models.Car {
