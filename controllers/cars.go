@@ -14,6 +14,7 @@ func GetCars(w http.ResponseWriter, r *http.Request) {
 	cars := []models.Car{}
 
 	models.DB.Find(&cars)
+
 	respondJSON(w, http.StatusOK, cars)
 }
 

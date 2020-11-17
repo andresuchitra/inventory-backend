@@ -21,13 +21,17 @@ func initRouters() {
 	router.HandleFunc("/cars/{id}", controllers.DeleteCar).Methods("DELETE")
 }
 
-
 func main() {
 	models.ConnectDB()
 
 	router = mux.NewRouter().StrictSlash(true)
 	initRouters()
 
-	loggedRouter := handlers.LoggingHandler(os.Stdout, router)
-	log.Fatal(http.ListenAndServe(":3001", loggedRouter))
+	loggedRouter := handlers.CombinedLoggingHandler(os.Stdout, router)
+
+	// setup handlers with CORS
+	originsOK := handlers.AllowedOrigins([]string{"*"})
+	methodsOK := handlers.AllowedMethods([]string{"GET", "POST", "OPTIONS", "DELETE", "PUT"})
+
+	log.Fatal(http.ListenAndServe(":3001", handlers.CORS(originsOK, methodsOK)(loggedRouter)))
 }
