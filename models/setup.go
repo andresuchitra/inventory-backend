@@ -15,7 +15,7 @@ var DB *gorm.DB
 
 // LoadEnv to load or init variables from .env
 func loadEnv() {
-	var err Error
+	var err error
 
 	if os.Getenv("APP_ENV") != "production" {
 		err = godotenv.Load(".env")
