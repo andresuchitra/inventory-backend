@@ -33,5 +33,9 @@ func main() {
 	originsOK := handlers.AllowedOrigins([]string{"*"})
 	methodsOK := handlers.AllowedMethods([]string{"GET", "POST", "OPTIONS", "DELETE", "PUT"})
 
-	log.Fatal(http.ListenAndServeTLS(":3001", os.Getenv(("CRT_FILE"), os.Getenv("KEY_FILE"), handlers.CORS(originsOK, methodsOK)(loggedRouter)))
+	go func() {
+		log.Fatal(http.ListenAndServe(":3001", handlers.CORS(originsOK, methodsOK)(loggedRouter)))
+	}()
+
+	log.Fatal(http.ListenAndServeTLS("", os.Getenv("CRT_FILE"), os.Getenv("KEY_FILE"), handlers.CORS(originsOK, methodsOK)(loggedRouter)))
 }
