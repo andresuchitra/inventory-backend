@@ -16,9 +16,9 @@ var router *mux.Router
 func initRouters() {
 	router.HandleFunc("/cars", controllers.GetCars).Methods("GET")
 	router.HandleFunc("/cars/{id}", controllers.GetCar).Methods("GET")
-	router.HandleFunc("/cars/{id}", controllers.UpdateCar).Methods("PUT")
-	router.HandleFunc("/cars", controllers.CreateCar).Methods("POST")
-	router.HandleFunc("/cars/{id}", controllers.DeleteCar).Methods("DELETE")
+	router.HandleFunc("/cars/{id}", controllers.UpdateCar).Methods("PUT", "OPTIONS")
+	router.HandleFunc("/cars", controllers.CreateCar).Methods("POST", "OPTIONS")
+	router.HandleFunc("/cars/{id}", controllers.DeleteCar).Methods("DELETE", "OPTIONS")
 }
 
 func main() {
@@ -27,15 +27,15 @@ func main() {
 	router = mux.NewRouter().StrictSlash(true)
 	initRouters()
 
-	loggedRouter := handlers.CombinedLoggingHandler(os.Stdout, router)
-
 	// setup handlers with CORS
-	originsOK := handlers.AllowedOrigins([]string{"*"})
-	methodsOK := handlers.AllowedMethods([]string{"GET", "POST", "OPTIONS", "DELETE", "PUT"})
+	cors := handlers.CORS(
+    handlers.AllowedHeaders([]string{"content-type"}),
+    handlers.AllowedOrigins([]string{"*"}),
+    handlers.AllowCredentials(),
+	)
 
-	go func() {
-		log.Fatal(http.ListenAndServe(":3001", handlers.CORS(originsOK, methodsOK)(loggedRouter)))
-	}()
+	router.Use(cors)
 
-	log.Fatal(http.ListenAndServeTLS("", os.Getenv("CRT_FILE"), os.Getenv("KEY_FILE"), handlers.CORS(originsOK, methodsOK)(loggedRouter)))
+	loggedRouter := handlers.CombinedLoggingHandler(os.Stdout, router)
+	log.Fatal(http.ListenAndServe(":3001", loggedRouter))
 }
