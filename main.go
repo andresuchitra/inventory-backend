@@ -31,6 +31,7 @@ func main() {
 	cors := handlers.CORS(
     handlers.AllowedHeaders([]string{"content-type"}),
     handlers.AllowedOrigins([]string{"*"}),
+    handlers.AllowedMethods([]string{"OPTIONS", "GET", "POST", "PUT", "DELETE"}),
     handlers.AllowCredentials(),
 	)
 
