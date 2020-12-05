@@ -28,7 +28,7 @@ func loadEnv() {
 
 // ConnectDB - setup DB connection
 func ConnectDB() {
-	loadEnv()
+	// loadEnv()
 	username := os.Getenv("DB_USERNAME")
 	password := os.Getenv("DB_PASSWORD")
 	dbHost := os.Getenv("DB_HOST")
